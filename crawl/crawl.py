@@ -1,10 +1,10 @@
-import utils
+import os
+import platform
 import re
+import utils
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import platform
 from task import tasks
-import os
 
 if platform.platform().lower().find("linux") != -1:
     from pyvirtualdisplay import Display

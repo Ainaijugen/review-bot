@@ -2,6 +2,14 @@ import utils
 import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import platform
+
+if platform.platform().lower().find("linux") != -1:
+    from pyvirtualdisplay import Display
+
+    display = Display(visible=0, size=(800, 800))
+    display.start()
+print(platform.platform())
 
 params = {"confident_rate": 0.5, "page_size": 20, "attr_number": 8, "counts_per_attr": 2048, "item_per_page": 44}
 
@@ -15,7 +23,10 @@ def getsource(url, times):
     chrome_options.add_argument('--dns-prefetch-disable')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--headless')
-    browser = webdriver.Chrome(executable_path="./chromedriver")
+    if platform.platform().lower().find("linux") != -1:
+        browser = webdriver.Chrome(executable_path="chromedriver")
+    else:
+        browser = webdriver.Chrome(executable_path="./chromedriver")
     browser.set_page_load_timeout(10)
     try:
         browser.get(url)

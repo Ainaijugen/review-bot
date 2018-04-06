@@ -75,6 +75,12 @@ class GetToken:
         for seg in self.vocab:
             print(seg + " id =", self.word2id_dict[seg])
 
+    def resume(self):
+        for x in self.word2id_dict:
+            self.vocab.add(x)
+        self.word_cnt = len(self.word2id_dict)
+        # print(self.word_cnt)
+
 
 # if __name__ == "__main__":
 #     get = GetToken()
@@ -83,7 +89,7 @@ class GetToken:
 #     get.print_dict()
 #     print(get.vocab)
 
-def save(x, subpath, filename, force_recover = False):
+def save(x, subpath, filename, force_recover=False):
     subpath = "./data/" + subpath
     if not os.path.exists(subpath):
         os.makedirs(subpath)

@@ -11,7 +11,7 @@ if platform.platform().lower().find("linux") != -1:
     display.start()
 print(platform.platform())
 
-params = {"confident_rate": 0.5, "page_size": 20, "attr_number": 8, "counts_per_attr": 2048, "item_per_page": 44}
+params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 8, "counts_per_attr": 2048, "item_per_page": 44}
 
 
 def getsource(url, times):
@@ -42,7 +42,6 @@ class Crawl:
     def __init__(self, tier1, tier2):
         self.attr2feature = dict()
         self.attr2feedback = dict()
-        self.attr_remain_counts = dict()
         self.tiers = [tier1, tier2]
         self.attr_finished = []
         self.token = utils.GetToken()
@@ -84,37 +83,42 @@ class Crawl:
         for attr in attr_list:
             if attr not in self.attr2feedback:
                 self.attr2feedback[attr] = []
-                self.attr_remain_counts[attr] = params["counts_per_attr"]
-            attr_count[attr] = min(attr_count[attr], self.attr_remain_counts[attr])
+            attr_count[attr] = min(attr_count[attr], params["counts_per_attr"] - len(self.attr2feedback[attr]))
             if attr_count[attr] == 0:
                 continue
             i = 1
-            self.attr_remain_counts[attr] -= attr_count[attr]
-            self.counts += attr_count[attr]
             while attr_count[attr]:
                 content = getsource(feed_url % (item_id, i, attr), 0)
                 item = re.search("content\":\"", content)
+                if item is None:
+                    break
                 while item:
                     content = content[item.end():]
-                    feedback = content[:re.search("\",\"", content).start()]
+                    try:
+                        feedback = content[:re.search("\",\"", content).start()]
+                    except:
+                        break
                     content = content[re.search("\",\"", content).end():]
                     if content[:6] == "rateId":
                         feedback = self.token.tokenlize(utils.clean_string(feedback))
-                        print(feedback)
+                        # print(feedback)
                         self.attr2feedback[attr].append(feedback)
                         attr_count[attr] -= 1
+                        self.counts += 1
                         if attr_count[attr] == 0:
                             break
                     item = re.search("content\":\"", content)
                 i += 1
-            if self.attr_remain_counts[attr] == 0:
+            if len(self.attr2feedback[attr]) == params["counts_per_attr"]:
                 self.attr_finished.append(attr)
                 print("finished: ", self.attr2feature[attr])
         print("collected: %d\n" % self.counts)
+        for x in self.attr2feedback:
+            print(self.attr2feature[x] + ": ", len(self.attr2feedback[x]))
 
-    def crawl(self):
-        i = 0
-        while len(self.attr_finished) < params["attr_number"]:
+    def crawl(self, i=0):
+        i *= params["item_per_page"]
+        while len(self.attr_finished) < params["attr_number"] and i < params["item_per_page"] * 5:
             search_url = "https://s.taobao.com/search?q=%s+%s&commend=all&ssid=s5-e&search_type=item&sourceId=tb.index&spm=a21bo.2017.201856-taobao-item.1&ie=utf8&sort=sale-desc&initiative_id=staobaoz_20180406&s=%d" % (
                 self.tiers[0], self.tiers[1], i)
             content = getsource(search_url, 0)
@@ -129,20 +133,32 @@ class Crawl:
                     if len(self.attr_finished) >= params["attr_number"]:
                         break
             i += params["item_per_page"]
+            self.save()
+        while len(self.attr_finished) < params["attr_number"]:
+            Max = 0
+            add = None
+            for x in self.attr2feedback:
+                if x not in self.attr_finished:
+                    if Max < len(self.attr2feedback[x]):
+                        Max = len(self.attr2feedback[x])
+                        add = x
+            assert add is not None
+            self.attr_finished.append(add)
         print("finished! ", self.attr_finished)
 
-    def save(self):
+    def save(self, is_remove=False):
         # Token里面的大字典， 包含x个attr的两个大字典（一个是to feature，一个是to feedback）
         utils.save(self.token.word2id_dict, "%s_%s" % (self.tiers[0], self.tiers[1]), "word2id", True)
         # print(self.token.word2id_dict)
-        self.attr_finished = self.attr_finished[:params["attr_number"]]
-        remove = []
-        for x in self.attr2feature:
-            if x not in self.attr_finished:
-                remove.append(x)
-        for x in remove:
-            self.attr2feature.pop(x, None)
-            self.attr2feedback.pop(x, None)
+        if is_remove:
+            self.attr_finished = self.attr_finished[:params["attr_number"]]
+            remove = []
+            for x in self.attr2feature:
+                if x not in self.attr_finished:
+                    remove.append(x)
+            for x in remove:
+                self.attr2feature.pop(x, None)
+                self.attr2feedback.pop(x, None)
         utils.save(self.attr2feedback, "%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feedback", True)
         utils.save(self.attr2feature, "%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feature", True)
 
@@ -154,11 +170,20 @@ class Crawl:
         print(self.attr2feedback)
         print(self.attr2feature)
 
+    def resume(self, i):
+        self.load()
+        for x in self.attr2feedback:
+            if len(self.attr2feedback[x]) == params["counts_per_attr"]:
+                self.attr_finished.append(x)
+        self.token.resume()
+        self.crawl(i)
+
 
 crawl = Crawl("女装", "羽绒服")
-crawl.crawl()
-crawl.save()
-# crawl.load()
+# crawl.resume(4)
+# crawl.crawl()
+# crawl.save(True)
+crawl.load()
 
 '''
     https://rate.taobao.com/feedRateList.htm?auctionNumId=39595400262&currentPageNum=1

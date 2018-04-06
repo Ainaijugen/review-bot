@@ -1,6 +1,7 @@
 import utils
 import re
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 params = {"confident_rate": 0.5, "page_size": 20, "attr_number": 8, "counts_per_attr": 2048, "item_per_page": 44}
 
@@ -10,6 +11,10 @@ def getsource(url, times):
     if times == 3:
         return ""
     # browser = webdriver.PhantomJS(executable_path="./phantomjs/bin/phantomjs")
+    chrome_options = Options()
+    chrome_options.add_argument('--dns-prefetch-disable')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--headless')
     browser = webdriver.Chrome(executable_path="./chromedriver")
     browser.set_page_load_timeout(10)
     try:

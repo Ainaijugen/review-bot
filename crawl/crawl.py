@@ -3,6 +3,8 @@ import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import platform
+from task import tasks
+import os
 
 if platform.platform().lower().find("linux") != -1:
     from pyvirtualdisplay import Display
@@ -39,13 +41,14 @@ def getsource(url, times):
 
 
 class Crawl:
-    def __init__(self, tier1, tier2):
+    def __init__(self, tier1, tier2, i, j):
         self.attr2feature = dict()
         self.attr2feedback = dict()
         self.tiers = [tier1, tier2]
         self.attr_finished = []
         self.token = utils.GetToken()
         self.counts = 0
+        self.tiers_id = [i, j]
 
     def crawl_id(self, item_id):
         feed_url = "https://rate.taobao.com/feedRateList.htm?auctionNumId=%s&currentPageNum=%d&pageSize=20&rateType=&orderType=sort_weight&attribute=%s&sku=&hasSku=false&folded=0&callback=jsonp_tbcrate_reviews_list"
@@ -134,6 +137,9 @@ class Crawl:
                         break
             i += params["item_per_page"]
             self.save()
+            f = open("./data/%d_%d/is_finish.txt" % (self.tiers_id[0], self.tiers_id[1]), "w")
+            f.write("%d" % (i / params["item_per_page"]))
+            f.close()
         while len(self.attr_finished) < params["attr_number"]:
             Max = 0
             add = None
@@ -148,7 +154,7 @@ class Crawl:
 
     def save(self, is_remove=False):
         # Token里面的大字典， 包含x个attr的两个大字典（一个是to feature，一个是to feedback）
-        utils.save(self.token.word2id_dict, "%s_%s" % (self.tiers[0], self.tiers[1]), "word2id", True)
+        utils.save(self.token.word2id_dict, "%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "word2id", True)
         # print(self.token.word2id_dict)
         if is_remove:
             self.attr_finished = self.attr_finished[:params["attr_number"]]
@@ -159,13 +165,17 @@ class Crawl:
             for x in remove:
                 self.attr2feature.pop(x, None)
                 self.attr2feedback.pop(x, None)
-        utils.save(self.attr2feedback, "%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feedback", True)
-        utils.save(self.attr2feature, "%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feature", True)
+        utils.save(self.attr2feedback, "%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "attr2feedback", True)
+        utils.save(self.attr2feature, "%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "attr2feature", True)
+        if is_remove:
+            f = open("./data/%d_%d/is_finish.txt" % (self.tiers_id[0], self.tiers_id[1]), "w")
+            f.write("%d" % -1)
+            f.close()
 
     def load(self):
-        self.token.word2id_dict = utils.load("%s_%s" % (self.tiers[0], self.tiers[1]), "word2id")
-        self.attr2feedback = utils.load("%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feedback")
-        self.attr2feature = utils.load("%s_%s" % (self.tiers[0], self.tiers[1]), "attr2feature")
+        self.token.word2id_dict = utils.load("%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "word2id")
+        self.attr2feedback = utils.load("%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "attr2feedback")
+        self.attr2feature = utils.load("%d_%d" % (self.tiers_id[0], self.tiers_id[1]), "attr2feature")
         print(self.token.word2id_dict)
         print(self.attr2feedback)
         print(self.attr2feature)
@@ -179,11 +189,23 @@ class Crawl:
         self.crawl(i)
 
 
-crawl = Crawl("女装", "羽绒服")
-# crawl.resume(4)
-# crawl.crawl()
-# crawl.save(True)
-crawl.load()
+for i in range(len(tasks)):
+    for j in range(len(tasks[i][1])):
+        crawl = Crawl(tasks[i][0], tasks[i][1][j], i, j)
+        if not os.path.exists("./data/%d_%d" % (i, j)):
+            crawl.crawl()
+            crawl.save(True)
+        else:
+            try:
+                f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
+                checkpoint = int(f.readline().strip())
+                if checkpoint > 0:
+                    crawl.crawl(checkpoint)
+                    crawl.save(True)
+            except:
+                crawl.crawl()
+                crawl.save(True)
+        crawl.load()
 
 '''
     https://rate.taobao.com/feedRateList.htm?auctionNumId=39595400262&currentPageNum=1

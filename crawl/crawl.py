@@ -200,7 +200,7 @@ for i in range(len(tasks)):
                 f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
                 checkpoint = int(f.readline().strip())
                 if checkpoint > 0:
-                    crawl.crawl(checkpoint)
+                    crawl.resume(checkpoint)
                     crawl.save(True)
             except:
                 crawl.crawl()

@@ -148,7 +148,9 @@ class Crawl:
                     if Max < len(self.attr2feedback[x]):
                         Max = len(self.attr2feedback[x])
                         add = x
-            assert add is not None
+            #assert add is not None
+            if add is None:
+                break
             self.attr_finished.append(add)
         print("finished! ", self.attr_finished)
 

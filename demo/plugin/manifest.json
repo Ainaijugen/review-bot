@@ -1,0 +1,38 @@
+ {
+    "name": "Review Bot",
+    "version": "1.0",
+    "description": "Generate reviews for TaoBao/JingDong automatically.",
+    "permissions": ["activeTab", "declarativeContent", "storage"],
+    "background": {
+      "scripts": ["review.js"],
+      "persistent": false
+    },
+    "options_page": "options.html",
+    "content_scripts": [ {
+      "all_frames": true,
+      "css": [ "bootstrap.min.css", "style.css" ],
+      "exclude_globs": [  ],
+      "exclude_matches": [  ],
+      "include_globs": [  ],
+      "js": [ "libs/jquery.js", "bootstrap.min.js", "extension.js" ],
+      "matches": [ "https://rate.taobao.com/*" ],
+      "run_at": "document_idle"
+   }],
+    "page_action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "images/review_ic16.png",
+        "32": "images/review_ic32.png",
+        "48": "images/review_ic48.png",
+        "128": "images/review_ic128.png"
+      }
+    },
+    "icons": {
+      "16": "images/review_ic16.png",
+      "32": "images/review_ic32.png",
+      "48": "images/review_ic48.png",
+      "128": "images/review_ic128.png"
+    },
+    "web_accessible_resources": [ "panel.html"],
+    "manifest_version": 2
+  }

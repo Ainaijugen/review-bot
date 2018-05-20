@@ -13,7 +13,7 @@ if platform.platform().lower().find("linux") != -1:
     display.start()
 print(platform.platform())
 
-params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 8, "counts_per_attr": 2048, "item_per_page": 44}
+params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 16, "counts_per_attr": 2048, "item_per_page": 44}
 
 
 def getsource(url, times):
@@ -50,71 +50,139 @@ class Crawl:
         self.counts = 0
         self.tiers_id = [i, j]
 
-    def crawl_id(self, item_id):
-        feed_url = "https://rate.taobao.com/feedRateList.htm?auctionNumId=%s&currentPageNum=%d&pageSize=20&rateType=&orderType=sort_weight&attribute=%s&sku=&hasSku=false&folded=0&callback=jsonp_tbcrate_reviews_list"
-        map_url = ("https://rate.taobao.com/detailCommon.htm?auctionNumId=%s&callback=json_tbc_rate_summary" % item_id)
-        content = getsource(map_url, 0)
-        item = re.search("count\":", content)
-        attr_list = []
-        attr_count = dict()
-        while item:
-            content = content[item.end():]
-            try:
-                count = int(content[:re.search(",", content).start()])
-            except:
-                break
-
-            item = re.search("attribute\":\"", content)
-            content = content[item.end():]
-            attr = content[:re.search("\"", content).start()]
-
-            item = re.search("title\":\"", content)
-            content = content[item.end():]
-            title = content[:re.search("\"", content).start()]
-
-            item = re.search("value\":", content)
-            content = content[item.end():]
-            value = int(content[:re.search("\}", content).start()])
-
-            if value > 0:
-                self.attr2feature[attr] = title
-                attr_list.append(attr)
-                attr_count[attr] = int(count * params["confident_rate"])
-
+    def crawl_id(self, item_id, user_id=None):
+        if user_id is None:
+            feed_url = "https://rate.taobao.com/feedRateList.htm?auctionNumId=%s&currentPageNum=%d&pageSize=20&rateType=&orderType=sort_weight&attribute=%s&sku=&hasSku=false&folded=0&callback=jsonp_tbcrate_reviews_list"
+            map_url = (
+                    "https://rate.taobao.com/detailCommon.htm?auctionNumId=%s&callback=json_tbc_rate_summary" % item_id)
+            content = getsource(map_url, 0)
             item = re.search("count\":", content)
-        print(attr_list)
-        for attr in attr_list:
-            if attr not in self.attr2feedback:
-                self.attr2feedback[attr] = []
-            attr_count[attr] = min(attr_count[attr], params["counts_per_attr"] - len(self.attr2feedback[attr]))
-            if attr_count[attr] == 0:
-                continue
-            i = 1
-            while attr_count[attr]:
-                content = getsource(feed_url % (item_id, i, attr), 0)
-                item = re.search("content\":\"", content)
-                if item is None:
+            attr_list = []
+            attr_count = dict()
+            while item:
+                content = content[item.end():]
+                try:
+                    count = int(content[:re.search(",", content).start()])
+                except:
                     break
-                while item:
-                    content = content[item.end():]
-                    try:
-                        feedback = content[:re.search("\",\"", content).start()]
-                    except:
-                        break
-                    content = content[re.search("\",\"", content).end():]
-                    if content[:6] == "rateId":
-                        feedback = self.token.tokenlize(utils.clean_string(feedback))
-                        # print(feedback)
-                        self.attr2feedback[attr].append(feedback)
-                        attr_count[attr] -= 1
-                        self.counts += 1
-                        if attr_count[attr] == 0:
-                            break
+
+                item = re.search("attribute\":\"", content)
+                content = content[item.end():]
+                attr = content[:re.search("\"", content).start()]
+
+                item = re.search("title\":\"", content)
+                content = content[item.end():]
+                title = content[:re.search("\"", content).start()]
+
+                item = re.search("value\":", content)
+                content = content[item.end():]
+                value = int(content[:re.search("\}", content).start()])
+
+                if value > 0:
+                    self.attr2feature[attr] = title
+                    attr_list.append(attr)
+                    attr_count[attr] = int(count * params["confident_rate"])
+
+                item = re.search("count\":", content)
+            print(attr_list)
+            for attr in attr_list:
+                if attr not in self.attr2feedback:
+                    self.attr2feedback[attr] = []
+                attr_count[attr] = min(attr_count[attr], params["counts_per_attr"] - len(self.attr2feedback[attr]))
+                if attr_count[attr] == 0:
+                    continue
+                i = 1
+                while attr_count[attr]:
+                    content = getsource(feed_url % (item_id, i, attr), 0)
                     item = re.search("content\":\"", content)
-                i += 1
-            if len(self.attr2feedback[attr]) == params["counts_per_attr"]:
-                self.attr_finished.append(attr)
-                print("finished: ", self.attr2feature[attr])
+                    if item is None:
+                        break
+                    while item:
+                        content = content[item.end():]
+                        try:
+                            feedback = content[:re.search("\",\"", content).start()]
+                        except:
+                            break
+                        content = content[re.search("\",\"", content).end():]
+                        if content[:6] == "rateId":
+                            feedback = self.token.tokenlize(utils.clean_string(feedback))
+                            # print(feedback)
+                            self.attr2feedback[attr].append(feedback)
+                            attr_count[attr] -= 1
+                            self.counts += 1
+                            if attr_count[attr] == 0:
+                                break
+                        item = re.search("content\":\"", content)
+                    i += 1
+                if len(self.attr2feedback[attr]) == params["counts_per_attr"]:
+                    self.attr_finished.append(attr)
+                    print("finished: ", self.attr2feature[attr])
+        else:
+            feed_url = "https://rate.tmall.com/list_detail_rate.htm?itemId=%s&sellerId=%s&order=3&currentPage=%d&append=0&content=1&tagId=%s"
+            map_url = (
+                    "https://rate.tmall.com/listTagClouds.htm?itemId=%s&isAll=true&isInner=true" % item_id)
+            content = getsource(map_url, 0)
+            item = re.search("count\":", content)
+            attr_list = []
+            attr_count = dict()
+            while item:
+                content = content[item.end():]
+                try:
+                    count = int(content[:re.search(",", content).start()])
+                except:
+                    break
+
+                item = re.search("id\":\"", content)
+                content = content[item.end():]
+                attr = content[:re.search("\"", content).start()]
+
+                item = re.search("posi\":", content)
+                content = content[item.end():]
+                value = content[:re.search(",", content).start()]
+
+                item = re.search("tag\":\"", content)
+                content = content[item.end():]
+                title = content[:re.search("\"", content).start()]
+
+                if value == "true":
+                    self.attr2feature[attr] = title
+                    attr_list.append(attr)
+                    attr_count[attr] = int(count * params["confident_rate"])
+
+                item = re.search("count\":", content)
+            print(attr_list)
+            for attr in attr_list:
+                if attr not in self.attr2feedback:
+                    self.attr2feedback[attr] = []
+                attr_count[attr] = min(attr_count[attr], params["counts_per_attr"] - len(self.attr2feedback[attr]))
+                if attr_count[attr] == 0:
+                    continue
+                i = 1
+                while attr_count[attr]:
+                    content = getsource(feed_url % (item_id, user_id, i, attr), 0)
+                    item = re.search("rateContent\":\"", content)
+                    if item is None:
+                        break
+                    while item:
+                        content = content[item.end():]
+                        try:
+                            feedback = content[:re.search("\",\"", content).start()]
+                        except:
+                            break
+                        content = content[re.search("\",\"", content).end():]
+                        if content[:8] == "rateDate":
+                            feedback = self.token.tokenlize(utils.clean_string(feedback))
+                            # print(feedback)
+                            self.attr2feedback[attr].append(feedback)
+                            attr_count[attr] -= 1
+                            self.counts += 1
+                            if attr_count[attr] == 0:
+                                break
+                        item = re.search("rateContent\":\"", content)
+                    i += 1
+                if len(self.attr2feedback[attr]) == params["counts_per_attr"]:
+                    self.attr_finished.append(attr)
+                    print("finished: ", self.attr2feature[attr])
         print("collected: %d\n" % self.counts)
         for x in self.attr2feedback:
             print(self.attr2feature[x] + ": ", len(self.attr2feedback[x]))
@@ -129,12 +197,17 @@ class Crawl:
                 # print(content)
                 content = content[re.search("nid\":\"", content).end():]
                 item_id = content[:re.search("\"", content).start()]
+                content = content[re.search("user_id\":\"", content).end():]
+                user_id = content[:re.search("\"", content).start()]
                 content = content[re.search("\"isTmall\":", content).end():]
                 if content[0] == "f":
                     print(item_id)
                     self.crawl_id(item_id)
-                    if len(self.attr_finished) >= params["attr_number"]:
-                        break
+                else:
+                    print(item_id, "isTmall")
+                    self.crawl_id(item_id, user_id)
+                if len(self.attr_finished) >= params["attr_number"]:
+                    break
             i += params["item_per_page"]
             self.save()
             f = open("./data/%d_%d/is_finish.txt" % (self.tiers_id[0], self.tiers_id[1]), "w")
@@ -148,7 +221,7 @@ class Crawl:
                     if Max < len(self.attr2feedback[x]):
                         Max = len(self.attr2feedback[x])
                         add = x
-            #assert add is not None
+            # assert add is not None
             if add is None:
                 break
             self.attr_finished.append(add)
@@ -215,5 +288,6 @@ for i in range(len(tasks)):
     https://rate.taobao.com/detailCommon.htm?auctionNumId=536738885088&callback=json_tbc_rate_summary
     https://s.taobao.com/search?q=%s+%s&commend=all&ssid=s5-e&search_type=item&sourceId=tb.index&spm=a21bo.2017.201856-taobao-item.1&ie=utf8&sort=renqi-desc
     
-    
+    https://rate.tmall.com/listTagClouds.htm?itemId=40824408940&isAll=true&isInner=true
+    https://rate.tmall.com/list_detail_rate.htm?itemId=40824408940&sellerId=720252377&order=3&currentPage=1&append=0&content=1&tagId=4647
 '''

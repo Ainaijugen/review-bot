@@ -13,7 +13,7 @@ if platform.platform().lower().find("linux") != -1:
     display.start()
 print(platform.platform())
 
-params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 16, "counts_per_attr": 2048, "item_per_page": 44}
+params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 12, "counts_per_attr": 2048, "item_per_page": 44}
 
 
 def getsource(url, times):
@@ -266,21 +266,27 @@ class Crawl:
 
 for i in range(len(tasks)):
     for j in range(len(tasks[i][1])):
-        crawl = Crawl(tasks[i][0], tasks[i][1][j], i, j)
-        if not os.path.exists("./data/%d_%d" % (i, j)):
-            crawl.crawl()
-            crawl.save(True)
-        else:
+        flag = 1
+        while flag:
             try:
-                f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
-                checkpoint = int(f.readline().strip())
-                if checkpoint > 0:
-                    crawl.resume(checkpoint)
+                crawl = Crawl(tasks[i][0], tasks[i][1][j], i, j)
+                if not os.path.exists("./data/%d_%d" % (i, j)):
+                    crawl.crawl()
                     crawl.save(True)
+                else:
+                    try:
+                        f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
+                        checkpoint = int(f.readline().strip())
+                        if checkpoint > 0:
+                            crawl.resume(checkpoint)
+                            crawl.save(True)
+                    except:
+                        crawl.crawl()
+                        crawl.save(True)
+                crawl.load()
+                flag = 0
             except:
-                crawl.crawl()
-                crawl.save(True)
-        crawl.load()
+                pass
 
 '''
     https://rate.taobao.com/feedRateList.htm?auctionNumId=39595400262&currentPageNum=1

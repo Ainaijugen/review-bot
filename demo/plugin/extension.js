@@ -6,12 +6,41 @@
     var isClick = Array(reviewCount)
     for (var i = 0;i < reviewCount;i++)
     	isClick[i] = 0;
-
+    var plzWait = "评论正在生成请稍后...";
 	function init_container(container)
 	{
 		var controls = {
-			btnHide: null, panelBody: null, formBody: null
+			btnHide: null, panelBody: null, formBody: null, refresh: null
 	    };
+	    var ansRequestId = "";
+
+	    function requestReviews()
+	    {
+	    	let ws = new WebSocket ("ws://localhost:34567")
+		    ws.onmessage = function(event) {
+			  	var msg = event.data.split(/magic/g);
+			  	for(var i = 0;i < reviewCount;i++)
+	    		{
+	    			reviews[i].text(msg[i]);
+	    		}
+			  	ws.close();
+			};
+		    ws.onopen = function () {
+		        ws.send("reviews " + ansRequestId);
+		    };
+	    }
+
+	    function requestId(itemName) {
+		    let ws = new WebSocket ("ws://localhost:34567")
+		    ws.onmessage = function(event) {
+			  	ansRequestId = event.data;
+			  	requestReviews();
+			  	ws.close();
+			};
+		    ws.onopen = function () {
+		        ws.send("id " + itemName);
+		    };
+		}
 
 	    for (var i in controls)
 	    {
@@ -30,11 +59,20 @@
 	            $(this).data("hide", true);
 	        }
 	    });
+	    controls.refresh.click(function() {
+    		requestReviews();
+    		for(var i = 0;i < reviewCount;i++)
+    		{
+    			isClick[i] = 0;
+    			reviews[i].css("background-color", "#ffffff");
+    		}
+	    })
 	    var reviews = new Array(reviewCount);
 	    for(var i = 0;i < reviewCount;i++)
 	    	reviews[i] = container.find("#review" + i.toString(10));
 	    for(var i = 0;i < reviewCount;i++)
 	    {
+	    	reviews[i].text(plzWait);
 	    	reviews[i].attr("self", i);
 	    	reviews[i].click(function()
 		    {
@@ -60,6 +98,7 @@
 		    });
 	    }
 	    container.slideDown();
+	    requestId("没准过");
 	}
 
 	$("body").append("<div id=\"extension\"></div>");

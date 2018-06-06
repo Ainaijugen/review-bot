@@ -13,7 +13,7 @@ if platform.platform().lower().find("linux") != -1:
     display.start()
 print(platform.platform())
 
-params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 12, "counts_per_attr": 2048, "item_per_page": 44}
+params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 12, "counts_per_attr": 1024, "item_per_page": 44}
 
 
 def getsource(url, times):

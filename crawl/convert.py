@@ -4,7 +4,7 @@ import numpy as np
 
 for i in range(len(tasks)):
     for j in range(len(tasks[i][1])):
-        if os.path.exists("./data/%d_%d" % (i, j)):
+        if os.path.exists("./data/%d_%d" % (i, j)) and not os.path.exists("./data/%d_%d/all.txt" % (i, j)):
             all = open("./data/%d_%d/all.txt" % (i, j), "w")
             attr2feedback = dict(np.load("./data/%d_%d/attr2feedback.npy" % (i, j)).item())
             for x in attr2feedback:

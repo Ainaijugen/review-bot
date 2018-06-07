@@ -60,6 +60,10 @@
 	        }
 	    });
 	    controls.refresh.click(function() {
+	    	for(var i = 0;i < reviewCount;i++)
+	    	{
+	    		reviews[i].text(plzWait);
+	    	}
     		requestReviews();
     		for(var i = 0;i < reviewCount;i++)
     		{

@@ -1,5 +1,6 @@
 import logging
 from websocket_server import WebsocketServer
+import JVM.train.test as test
 
 
 # Called when a client sends a message
@@ -9,11 +10,12 @@ def message_received(client, server, message):
     request = message.split()[1]
     if message.split()[0][0] == "r":
         # TODO
-        answer = ["很棒", "不错", "好美", "开玩笑的", "这只是测试"]
+        id = int(request.split('_')[0]) * 4 + int(request.split('_')[1])
+        answer = test.inference(id, 70)
         server.send_message_to_all("magic".join(answer))
     else:
         # TODO
-        answer = "0_0"
+        answer = "2_3"
         server.send_message_to_all(answer)
 
 

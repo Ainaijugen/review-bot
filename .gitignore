@@ -1,2 +1,5 @@
 crawl/*.log
 *.idea*
+JVM/train/experiments/*
+JVM/data/*
+

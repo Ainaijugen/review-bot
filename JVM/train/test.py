@@ -4,6 +4,7 @@ import tensorflow as tf
 from JVM.train.utils import *
 import pickle
 import sys
+import sentence
 
 sys.path.append('..')
 from JVM.config import experiment_path, get_configs
@@ -71,4 +72,7 @@ if __name__ == "__main__":
 
 
 def inference(experiment_id, stop_length=100):
-    return auto_generate_sentence(experiment_id, stop_length)
+    try:
+        return auto_generate_sentence(experiment_id, stop_length)
+    except:
+        return sentence.main("./crawl/data/%d_%d/all.txt" % (experiment_id // 4, experiment_id % 4), stop_length)

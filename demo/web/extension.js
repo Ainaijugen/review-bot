@@ -7,11 +7,11 @@
     for (var i = 0;i < reviewCount;i++)
     	isClick[i] = 0;
     var plzWait = "评论正在生成请稍后...";
-	function init_container(container, itemInfo)
+	function init_container()
 	{
-		var itemName = itemInfo.find("h3").find("a").text();
 		var controls = {
-			btnHide: null, panelBody: null, formBody: null, refresh: null
+			panelBody: null, refresh: null, submit: null, textArea: null,
+			clear: null, chooseImage: null, showImg: null,
 	    };
 	    var ansRequestId = "";
 
@@ -42,24 +42,11 @@
 		        ws.send("id " + itemName);
 		    };
 		}
-
 	    for (var i in controls)
 	    {
-	        controls[i] = container.find("#" + i);
+	        controls[i] = $("#" + i);
 	    }
 	    ctrlBar = controls.panelBody;
-	    controls.btnHide.click(function() {
-	        if ($(this).data("hide")) {
-	            $(this).text("隐藏好评机器人");
-	            ctrlBar.slideDown();
-	            $(this).data("hide", false);
-	        }
-	        else {
-	            $(this).text("显示好评机器人");
-	            ctrlBar.slideUp();
-	            $(this).data("hide", true);
-	        }
-	    });
 	    controls.refresh.click(function() {
 	    	for(var i = 0;i < reviewCount;i++)
 	    	{
@@ -72,9 +59,49 @@
     			reviews[i].css("background-color", "#ffffff");
     		}
 	    })
+	    controls.submit.click(function() {
+	    	if (controls.textArea.val() != "" && controls.chooseImage.val() != "")
+	    	{
+	    		alert("监测到文本框和文件都非空，请清空其中之一");
+	    		return;
+	    	}
+	    	if (controls.textArea.val() == "" && controls.chooseImage.val() == "")
+	    	{
+	    		alert("监测到文本框和文件都空，请填写其中之一");
+	    		return;
+	    	}
+	    	for(var i = 0;i < reviewCount;i++)
+	    	{
+	    		reviews[i].text(plzWait);
+	    	}
+	    	if (controls.textArea.val() != "") requestId(controls.textArea.val());
+	    	if (controls.chooseImage.val() != "") requestId(controls.chooseImage.val());
+    		for(var i = 0;i < reviewCount;i++)
+    		{
+    			isClick[i] = 0;
+    			reviews[i].css("background-color", "#ffffff");
+    		}
+	    })
+	    controls.clear.click(function() {
+	    	controls.textArea.val("");
+	    	controls.chooseImage.val("");
+	    	controls.showImg.attr('src',"");
+	    })
+	    controls.chooseImage.change(function(){  
+	        var filePath = $(this).val(),
+            fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase(),
+            src = window.URL.createObjectURL(this.files[0]);
+        	if( !fileFormat.match(/.png|.jpg|.jpeg/) ) {  
+            	alert('上传错误,文件格式必须为：png/jpg/jpeg');  
+            	return;    
+        	}  
+        	controls.showImg.attr('src',src);
+		});  
 	    var reviews = new Array(reviewCount);
 	    for(var i = 0;i < reviewCount;i++)
-	    	reviews[i] = container.find("#review" + i.toString(10));
+	    {
+	    	reviews[i] = $("#review" + i.toString(10));
+	    }
 	    for(var i = 0;i < reviewCount;i++)
 	    {
 	    	reviews[i].text(plzWait);
@@ -89,9 +116,6 @@
 		    		}
 		    	isClick[$(this).attr("self")] = 1;
 		    	$(this).css("background-color", chosenColor);
-		    	$('textarea').filter(function() {
-			        return this.name.match(/RateContents/);
-			    }).text($(this).text());
 		    });
 		    reviews[i].hover(function()
 		    {
@@ -102,19 +126,6 @@
 		    		$(this).css("background-color", "#ffffff");
 		    });
 	    }
-	    container.slideDown();
-	    requestId(itemName);
 	}
-
-	$("body").append("<div id=\"extension\"></div>");
-	$("#extension").load(chrome.extension.getURL('panel.html'), function(responseTxt,statusTxt,xhr){
-	    if(statusTxt=="success")
-	    {
-	    	init_container($("#extension"), $(".item-info"))
-	    }
-	    if(statusTxt=="error")
-	     	alert("Error: " + xhr.status + ": " + xhr.statusText);
-  	});
-    // 底部的空间
-    $('body').css({ marginBottom: "250px" });
+	$(document).ready(function () {init_container()});
 })(jQuery);

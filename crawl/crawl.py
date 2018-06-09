@@ -4,7 +4,7 @@ import re
 import utils
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from task import tasks
+from crawl.task import tasks
 
 if platform.platform().lower().find("linux") != -1:
     from pyvirtualdisplay import Display
@@ -16,7 +16,7 @@ print(platform.platform())
 params = {"confident_rate": 0.8, "page_size": 20, "attr_number": 12, "counts_per_attr": 1024, "item_per_page": 44}
 
 
-def getsource(url, times):
+def getsource(url, times, filename="./chromedriver"):
     print(url)
     if times == 3:
         return ""
@@ -28,7 +28,7 @@ def getsource(url, times):
     if platform.platform().lower().find("linux") != -1:
         browser = webdriver.Chrome(executable_path="chromedriver")
     else:
-        browser = webdriver.Chrome(executable_path="./chromedriver")
+        browser = webdriver.Chrome(executable_path=filename)
     browser.set_page_load_timeout(10)
     try:
         browser.get(url)
@@ -263,30 +263,30 @@ class Crawl:
         self.token.resume()
         self.crawl(i)
 
-
-for i in range(len(tasks)):
-    for j in range(len(tasks[i][1])):
-        flag = 1
-        while flag:
-            try:
-                crawl = Crawl(tasks[i][0], tasks[i][1][j], i, j)
-                if not os.path.exists("./data/%d_%d" % (i, j)):
-                    crawl.crawl()
-                    crawl.save(True)
-                else:
-                    try:
-                        f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
-                        checkpoint = int(f.readline().strip())
-                        if checkpoint > 0:
-                            crawl.resume(checkpoint)
-                            crawl.save(True)
-                    except:
+def main():
+    for i in range(len(tasks)):
+        for j in range(len(tasks[i][1])):
+            flag = 1
+            while flag:
+                try:
+                    crawl = Crawl(tasks[i][0], tasks[i][1][j], i, j)
+                    if not os.path.exists("./data/%d_%d" % (i, j)):
                         crawl.crawl()
                         crawl.save(True)
-                crawl.load()
-                flag = 0
-            except:
-                pass
+                    else:
+                        try:
+                            f = open("./data/%d_%d/is_finish.txt" % (i, j), "r")
+                            checkpoint = int(f.readline().strip())
+                            if checkpoint > 0:
+                                crawl.resume(checkpoint)
+                                crawl.save(True)
+                        except:
+                            crawl.crawl()
+                            crawl.save(True)
+                    crawl.load()
+                    flag = 0
+                except:
+                    pass
 
 '''
     https://rate.taobao.com/feedRateList.htm?auctionNumId=39595400262&currentPageNum=1

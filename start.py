@@ -36,13 +36,13 @@ def message_received(client, server, message):
             for x in answer1:
                 ans, proba = match.query(x)
                 print(ans, "svm: ", proba, "baidu: ", answer1[x])
-                if max_proba < proba + answer1[x]:
-                    max_proba = proba + answer1[x]
+                if max_proba < proba * answer1[x]:
+                    max_proba = proba * answer1[x]
                     answer = ans
         else:
             answer, _ = match.query(request)
         print(answer)
-        if answer[-1] == '5':
+        if answer[-1] == 'x':
             answer = "_".join([answer.split('_')[0], str(random.randint(0, 3))])
         server.send_message_to_all(answer)
     threadLock.release()

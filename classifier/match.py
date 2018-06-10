@@ -40,7 +40,7 @@ def svm_matching(words, modeltype):
             ans = svm_matching(words, i)
             print(ans)
             vec[i] += np.sum(ans) / 4
-        return vec / 2
+        return vec
 
 
 def parse_json(filename):
@@ -55,11 +55,10 @@ def parse_json(filename):
 def query(item_name):
     print(item_name)
     wls = jieba.lcut(item_name)
-    print(wls)
     ans = svm_matching(wls, -1)
     tier1 = np.argmax(ans)
-    tier2 = 5
-    max_proba = np.max(ans)
+    tier2 = 0
+    max_proba = 0
     for i in range(len(tasks)):
         ans1 = svm_matching(wls, i)
         t_tier2 = np.argmax(ans1)
@@ -67,13 +66,11 @@ def query(item_name):
             max_proba = ans1[t_tier2]
             tier2 = t_tier2
             tier1 = i
-    t_tier1 = np.argmax(ans)
-    if np.max(svm_matching(wls, t_tier1)) >= max_proba:
-        tans = svm_matching(wls, t_tier1)
-        tier2 = np.argmax(tans)
-        tier1 = t_tier1
-        max_proba = np.max(tans)
-    return "%d_%d" % (tier1, tier2), max_proba
-
-
-print(query(""))
+    if max_proba >= 0.5:
+        return "%d_%d" % (tier1, tier2), max_proba
+    tier1 = np.argmax(ans)
+    if np.max(svm_matching(wls, tier1)) >= 0.5:
+        ans = svm_matching(wls, tier1)
+        tier2 = np.argmax(ans)
+        return "%d_%d" % (int(tier1), int(tier2)), np.max(ans)
+    return "%d_x" % tier1, np.max(ans) / 4

@@ -1,11 +1,11 @@
 # encoding:utf-8
-from aip import AipImageClassify
 import base64
 import urllib.request, urllib.error, urllib.parse
 import sys
 import ssl
 import json
 import jieba
+
 
 def prepare():
     # get access key
@@ -19,18 +19,19 @@ def prepare():
     data = json.loads(content)
     return data['access_token']
 
+
 def read_picture(filepath):
     request_url = "https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general"
     f = open(filepath, 'rb')
     img = base64.b64encode(f.read())
-    params = {"image":img}
+    params = {"image": img}
     params = urllib.parse.urlencode(params).encode(encoding='UTF8')
     access_token = prepare()
     request_url = request_url + "?access_token=" + access_token
     request = urllib.request.Request(url=request_url, data=params)
     request.add_header('Content-Type', 'application/x-www-form-urlencoded')
     response = urllib.request.urlopen(request)
-    content = response.read()
+    content = response.read().decode('utf-8')
     # print(content.decode('utf-8'))
     # if content:
     #     file = open('./ans.txt','w')
@@ -43,5 +44,4 @@ def read_picture(filepath):
         ans[result[i]['keyword']] = result[i]['score']
     return ans
 
-
-print(read_picture('./data/test.jpg'))
+# print(read_picture('./data/test.jpg'))

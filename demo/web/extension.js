@@ -42,6 +42,7 @@
 		        ws.send("id " + encodeURI(itemName));
 		    };
 		}
+
 	    for (var i in controls)
 	    {
 	        controls[i] = $("#" + i);
@@ -52,7 +53,8 @@
 	    	{
 	    		reviews[i].text(plzWait);
 	    	}
-    		requestReviews();
+    		if (ansRequestId != "")
+    			requestReviews();
     		for(var i = 0;i < reviewCount;i++)
     		{
     			isClick[i] = 0;
@@ -60,22 +62,11 @@
     		}
 	    })
 	    controls.submit.click(function() {
-	    	if (controls.textArea.val() != "" && controls.chooseImage.val() != "")
-	    	{
-	    		alert("监测到文本框和文件都非空，请清空其中之一");
-	    		return;
-	    	}
-	    	if (controls.textArea.val() == "" && controls.chooseImage.val() == "")
-	    	{
-	    		alert("监测到文本框和文件都空，请填写其中之一");
-	    		return;
-	    	}
 	    	for(var i = 0;i < reviewCount;i++)
 	    	{
 	    		reviews[i].text(plzWait);
 	    	}
 	    	if (controls.textArea.val() != "") requestId(controls.textArea.val());
-	    	if (controls.chooseImage.val() != "") requestId(controls.chooseImage.val());
     		for(var i = 0;i < reviewCount;i++)
     		{
     			isClick[i] = 0;
@@ -86,6 +77,7 @@
 	    	controls.textArea.val("");
 	    	controls.chooseImage.val("");
 	    	controls.showImg.attr('src',"");
+	    	ansRequestId = "";
 	    })
 	    controls.chooseImage.change(function(){  
 	        var filePath = $(this).val(),
@@ -94,7 +86,7 @@
         	if( !fileFormat.match(/.png|.jpg|.jpeg/) ) {  
             	alert('上传错误,文件格式必须为：png/jpg/jpeg');  
             	return;    
-        	}  
+        	}
         	controls.showImg.attr('src',src);
 		});  
 	    var reviews = new Array(reviewCount);

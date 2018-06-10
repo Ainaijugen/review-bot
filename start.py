@@ -6,12 +6,15 @@ import classifier.match as match
 import random
 import chardet
 import urllib.request
+import os
+import classifier.photo_classify as photo_classify
 
 threadLock = threading.Lock()
 
 
 # Called when a client sends a message
 def message_received(client, server, message):
+    message = message.strip()
     if len(message.split()) != 2:
         request = "".join(message.split()[1:])
     else:
@@ -26,7 +29,18 @@ def message_received(client, server, message):
         answer = test.inference(id, 70)
         server.send_message_to_all("magic".join(answer))
     else:
-        answer = match.query(request)
+        answer = ""
+        if os.path.exists(request):
+            answer1 = photo_classify.read_picture(request)
+            max_proba = 0
+            for x in answer1:
+                ans, proba = match.query(x)
+                print(ans, "svm: ", proba, "baidu: ", answer1[x])
+                if max_proba < proba * answer1[x]:
+                    max_proba = proba * answer1[x]
+                    answer = ans
+        else:
+            answer, _ = match.query(request)
         print(answer)
         if answer[-1] == 'x':
             answer = "_".join([answer.split('_')[0], str(random.randint(0, 3))])

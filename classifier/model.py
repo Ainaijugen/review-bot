@@ -41,7 +41,7 @@ def main(isTrain):
         x = np.array(x)
         x = x.reshape(len(x), len(x[0]))
 
-        X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=0.25, random_state=33)
+        X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=0.10, random_state=33)
         ss = StandardScaler()
         X_train = ss.fit_transform(X_train)
         X_test = ss.transform(X_test)
@@ -59,29 +59,29 @@ def main(isTrain):
         Y_predict = lsvc.predict(X_test)
         print(classification_report(Y_test, Y_predict))
 
-    vectorizer = TfidfVectorizer(min_df=5)
-    x = vectorizer.fit_transform(all).toarray()
-    print(vectorizer.get_feature_names())
-    x = np.array(x)
-    x = x.reshape(len(x), len(x[0]))
-
-    X_train, X_test, Y_train, Y_test = train_test_split(x, yall, test_size=0.25, random_state=33)
-    ss = StandardScaler()
-    X_train = ss.fit_transform(X_train)
-    X_test = ss.transform(X_test)
-
-    X_shuf, Y_shuf = shuffle(X_train, Y_train)
-    if isTrain:
-        lsvc = LinearSVC()
-        lsvc = CalibratedClassifierCV(lsvc)
-        lsvc.fit(X_shuf, Y_shuf)
-        joblib.dump(lsvc, os.path.join(path, "model/model.m"))
-    else:
-        lsvc = joblib.load(os.path.join(path, "model/model.m"))
-
-    Y_predict = lsvc.predict(X_test)
-
-    print(classification_report(Y_test, Y_predict))
+    # vectorizer = TfidfVectorizer(min_df=5)
+    # x = vectorizer.fit_transform(all).toarray()
+    # print(vectorizer.get_feature_names())
+    # x = np.array(x)
+    # x = x.reshape(len(x), len(x[0]))
+    #
+    # X_train, X_test, Y_train, Y_test = train_test_split(x, yall, test_size=0.10, random_state=33)
+    # ss = StandardScaler()
+    # X_train = ss.fit_transform(X_train)
+    # X_test = ss.transform(X_test)
+    #
+    # X_shuf, Y_shuf = shuffle(X_train, Y_train)
+    # if isTrain:
+    #     lsvc = LinearSVC()
+    #     lsvc = CalibratedClassifierCV(lsvc)
+    #     lsvc.fit(X_shuf, Y_shuf)
+    #     joblib.dump(lsvc, os.path.join(path, "model/model.m"))
+    # else:
+    #     lsvc = joblib.load(os.path.join(path, "model/model.m"))
+    #
+    # Y_predict = lsvc.predict(X_test)
+    #
+    # print(classification_report(Y_test, Y_predict))
 
 
 main(True)

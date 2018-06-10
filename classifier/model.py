@@ -13,6 +13,9 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from crawl.task import tasks
 from sklearn.externals import joblib
 from sklearn.calibration import CalibratedClassifierCV
+import os
+
+path = os.path.dirname(__file__)
 
 
 def main(isTrain):
@@ -24,7 +27,7 @@ def main(isTrain):
         y = []
         for j in range(len(tasks[i][1])):
             print(i, j)
-            trainij = codecs.open('./data/trainnew%d_%d' % (i, j), 'r', 'utf-8')
+            trainij = codecs.open(os.path.join(path, 'data/trainnew%d_%d' % (i, j)), 'r', 'utf-8')
             dataij = trainij.readlines()
             corpus.extend(dataij)
             all.extend(dataij)
@@ -34,7 +37,7 @@ def main(isTrain):
 
         vectorizer = TfidfVectorizer(min_df=5)
         x = vectorizer.fit_transform(corpus).toarray()
-        np.save('./model/feature%d.npy' % i, vectorizer.get_feature_names())
+        np.save(os.path.join(path, 'model/feature%d.npy' % i), vectorizer.get_feature_names())
         x = np.array(x)
         x = x.reshape(len(x), len(x[0]))
 
@@ -49,9 +52,9 @@ def main(isTrain):
             lsvc = LinearSVC()
             lsvc = CalibratedClassifierCV(lsvc)
             lsvc.fit(X_shuf, Y_shuf)
-            joblib.dump(lsvc, "./model/submodel%d.m" % (i))
+            joblib.dump(lsvc, os.path.join(path, "model/submodel%d.m" % i))
         else:
-            lsvc = joblib.load("./model/submodel%d.m" % (i))
+            lsvc = joblib.load(os.path.join(path, "model/submodel%d.m" % i))
 
         Y_predict = lsvc.predict(X_test)
         print(classification_report(Y_test, Y_predict))
@@ -72,9 +75,9 @@ def main(isTrain):
         lsvc = LinearSVC()
         lsvc = CalibratedClassifierCV(lsvc)
         lsvc.fit(X_shuf, Y_shuf)
-        joblib.dump(lsvc, "./model/model.m")
+        joblib.dump(lsvc, os.path.join(path, "model/model.m"))
     else:
-        lsvc = joblib.load("./model/model.m")
+        lsvc = joblib.load(os.path.join(path, "model/model.m"))
 
     Y_predict = lsvc.predict(X_test)
 

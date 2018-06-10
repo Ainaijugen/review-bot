@@ -39,7 +39,7 @@
 			  	ws.close();
 			};
 		    ws.onopen = function () {
-		        ws.send("id " + itemName);
+		        ws.send("id " + encodeURI(itemName));
 		    };
 		}
 

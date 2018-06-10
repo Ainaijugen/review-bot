@@ -59,3 +59,6 @@ def query(item_name):
         tier2 = np.argmax(svm_matching(jieba.lcut(item_name), tier1))
         return "%d_%d" % (int(tier1), int(tier2))
     return "%d_x" % tier1
+
+for i in range(0,10):
+    print(svm_matching(["防晒霜"],i))

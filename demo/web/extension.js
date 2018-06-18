@@ -11,7 +11,7 @@
 	{
 		var controls = {
 			panelBody: null, refresh: null, submit: null, textArea: null,
-			clear: null, chooseImage: null, showImg: null,
+			clear: null, showImg: null,
 	    };
 	    var ansRequestId = "";
 
@@ -31,6 +31,13 @@
 		    };
 	    }
 
+	    function showimage(filePath){  
+            fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase();
+        	if (fileFormat.match(/.png|.jpg|.jpeg/)) {  
+  				controls.showImg.attr('src',filePath);
+        	}
+		}
+
 	    function requestId(itemName) {
 		    let ws = new WebSocket ("ws://localhost:34567")
 		    ws.onmessage = function(event) {
@@ -39,6 +46,7 @@
 			  	ws.close();
 			};
 		    ws.onopen = function () {
+		    	showimage(itemName);
 		        ws.send("id " + encodeURI(itemName));
 		    };
 		}
@@ -75,20 +83,13 @@
 	    })
 	    controls.clear.click(function() {
 	    	controls.textArea.val("");
-	    	controls.chooseImage.val("");
 	    	controls.showImg.attr('src',"");
 	    	ansRequestId = "";
+	    	for(var i = 0;i < reviewCount;i++)
+	    	{
+	    		reviews[i].text(plzWait);
+	    	}
 	    })
-	    controls.chooseImage.change(function(){  
-	        var filePath = $(this).val(),
-            fileFormat = filePath.substring(filePath.lastIndexOf(".")).toLowerCase(),
-            src = window.URL.createObjectURL(this.files[0]);
-        	if( !fileFormat.match(/.png|.jpg|.jpeg/) ) {  
-            	alert('上传错误,文件格式必须为：png/jpg/jpeg');  
-            	return;    
-        	}
-        	controls.showImg.attr('src',src);
-		});  
 	    var reviews = new Array(reviewCount);
 	    for(var i = 0;i < reviewCount;i++)
 	    {

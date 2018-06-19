@@ -7,9 +7,11 @@
     for (var i = 0;i < reviewCount;i++)
     	isClick[i] = 0;
     var plzWait = "评论正在生成请稍后...";
-	function init_container(container, itemInfo)
+	function init_container(container, itemInfo1, itemInfo2)
 	{
-		var itemName = itemInfo.find("h3").find("a").text();
+		var itemName = itemInfo1.find("h3").find("a").text();
+		if (itemName == "")
+			itemName = itemInfo2.find("h3").text();
 		var controls = {
 			btnHide: null, panelBody: null, formBody: null, refresh: null
 	    };
@@ -90,7 +92,7 @@
 		    	isClick[$(this).attr("self")] = 1;
 		    	$(this).css("background-color", chosenColor);
 		    	$('textarea').filter(function() {
-			        return this.name.match(/RateContents/);
+			        return this.name.match(/RateContents|qualityContent/);
 			    }).text($(this).text());
 		    });
 		    reviews[i].hover(function()
@@ -110,7 +112,7 @@
 	$("#extension").load(chrome.extension.getURL('panel.html'), function(responseTxt,statusTxt,xhr){
 	    if(statusTxt=="success")
 	    {
-	    	init_container($("#extension"), $(".item-info"))
+	    	init_container($("#extension"), $(".item-info"), $(".ui-form-label"))
 	    }
 	    if(statusTxt=="error")
 	     	alert("Error: " + xhr.status + ": " + xhr.statusText);

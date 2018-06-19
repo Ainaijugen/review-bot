@@ -15,7 +15,7 @@
       "exclude_matches": [  ],
       "include_globs": [  ],
       "js": [ "libs/jquery.js", "bootstrap.min.js", "extension.js" ],
-      "matches": [ "https://rate.taobao.com/*" ],
+      "matches": [ "https://rate.taobao.com/*" , "https://ratewrite.tmall.com/*"],
       "run_at": "document_idle"
    }],
     "page_action": {
